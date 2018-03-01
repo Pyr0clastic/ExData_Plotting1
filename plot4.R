@@ -1,0 +1,36 @@
+library(dplyr)
+library(lubridate)
+library(chron)
+data <- read.table("household_power_consumption.txt", sep=";", stringsAsFactors = FALSE, header=TRUE)
+data <- tbl_df(data)
+data <- mutate(data, Date = dmy(Date))
+data$Time <- strptime(data$Time, "%T")
+data$Time <- times(format(data$Time, "%H:%M:%S"))
+dates <- filter(data, Date=="2007-02-01" | Date=="2007-02-02")
+
+dates$Sub_metering_1 <- as.numeric(dates$Sub_metering_1)
+dates$Sub_metering_2 <- as.numeric(dates$Sub_metering_2)
+dates$Sub_metering_3 <- as.numeric(dates$Sub_metering_3)
+dates$Global_reactive_power <- as.numeric(dates$Global_reactive_power)
+dates$Global_active_power <- as.numeric(dates$Global_active_power)
+dates$Voltage <- as.numeric(dates$Voltage)
+dates$Global_intensity <- as.numeric(dates$Global_intensity)
+
+
+dates$date_time <- strptime(paste(dates$Date, dates$Time), "%Y-%m-%d %H:%M:%S")
+dates$date_time <- as.POSIXct(dates$date_time)
+
+#attach(dates)
+png("plot4.png", width = 480, height=480)
+par(mfrow = c(2, 2), bg=NA)
+with(dates,{
+        plot(date_time, Global_active_power, type = "l", ylab = "Global Active Power", xlab = "")
+        plot(date_time, Voltage, type="l", ylab="Voltage", xlab="datetime")
+        plot(date_time, Sub_metering_1, type="l", ylab="Energy sub metering", xlab="")
+        lines(date_time, Sub_metering_2, col="red", type="l")
+        lines(date_time, Sub_metering_3, col="blue", type="l")
+        legend("topright", lty=1, legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), col = c("black", "red", "blue"))
+        plot(date_time, Global_reactive_power, type="l", xlab="datetime")
+        
+})
+dev.off()
